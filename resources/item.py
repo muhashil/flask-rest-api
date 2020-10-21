@@ -48,8 +48,8 @@ class Item(Resource):
         item = ItemModel.find_by_name(name)
         if item:
             item.delete()
-
-        return {'message': 'Item deleted.'}, 204
+            return {'message': 'Item deleted.'}, 204
+        return {'message': 'Item not found'}, 404
 
     def put(self, name):
         data = Item.parser.parse_args()
