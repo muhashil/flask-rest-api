@@ -1,5 +1,6 @@
 from werkzeug.security import safe_str_cmp
 
+from flask import request
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import (
     create_access_token, 
@@ -9,7 +10,13 @@ from flask_jwt_extended import (
     jwt_required,
     jwt_refresh_token_required)
 
+from marshmallow import ValidationError
 from models.user import UserModel
+from schemas.user import UserSchema
+from blacklist import BLACKLIST
+
+
+user_schema = UserSchema()
 
 
 class UserRegister(Resource):
@@ -27,13 +34,15 @@ class UserRegister(Resource):
     )
 
     def post(self):
-        data = UserRegister.parser.parse_args()
+        try:
+            user = user_schema.load(request.get_json())
+        except ValidationError as err:
+            return err.messages, 400
 
-        if UserModel.find_by_username(data['username']):
-            username = data['username']
+        if UserModel.find_by_username(user.username):
+            username = user.username
             return {'message': f'A user with username `{username}` already exists.'}, 400
 
-        user = UserModel(**data)
         user.save_to_db()
 
         return {'message': 'User successfully created.'}, 201
@@ -44,8 +53,7 @@ class User(Resource):
         user = UserModel.find_by_id(id_)
         if not user:
             return {'message': 'User not found.'}, 404
-
-        return user.json()
+        return user_schema.dump(user), 200
 
     def delete(self, id_):
         user = UserModel.find_by_id(id_)
@@ -72,16 +80,20 @@ class UserLogin(Resource):
 
     def post(self):
         # get data from parser
-        data = UserLogin.parser.parse_args()
+        try:
+            user = user_schema.load(request.get_json())
+        except ValidationError as err:
+            return err.messages, 400
+
         # get user from database
-        user = UserModel.find_by_username(data['username'])
+        existing_user = UserModel.find_by_username(user.username)
         # check user password
-        if user and safe_str_cmp(user.password, data['password']):
+        if existing_user and safe_str_cmp(existing_user.password, user.password):
             # create access token
+            access_token = create_access_token(identity=existing_user.id, fresh=True)
             # create refresh token
+            refresh_token = create_refresh_token(existing_user.id)
             # return token
-            access_token = create_access_token(identity=user.id, fresh=True)
-            refresh_token = create_refresh_token(user.id)
             return {'access_token': access_token, 'refresh_token': refresh_token}, 200
 
         return {'message': 'Invalid credentials.'}, 401

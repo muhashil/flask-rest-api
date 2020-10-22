@@ -4,6 +4,7 @@ from flask_restful import Api
 from flask_jwt_extended import JWTManager
 
 from db import db
+from ma import ma
 from blacklist import BLACKLIST
 from authentication import authenticate, identity
 from resources.user import UserRegister, User, UserLogin, UserTokenRefresh, UserLogout
@@ -80,5 +81,6 @@ api.add_resource(UserLogout, '/logout')
 
 if __name__ == '__main__':
     db.init_app(app)
+    ma.init_app(app)
 
     app.run(debug=True, port=5000)
