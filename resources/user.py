@@ -1,6 +1,6 @@
 from werkzeug.security import safe_str_cmp
 
-from flask import request
+from flask import request, make_response, render_template
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import (
     create_access_token, 
@@ -89,12 +89,14 @@ class UserLogin(Resource):
         existing_user = UserModel.find_by_username(user.username)
         # check user password
         if existing_user and safe_str_cmp(existing_user.password, user.password):
-            # create access token
-            access_token = create_access_token(identity=existing_user.id, fresh=True)
-            # create refresh token
-            refresh_token = create_refresh_token(existing_user.id)
-            # return token
-            return {'access_token': access_token, 'refresh_token': refresh_token}, 200
+            if existing_user.is_active:
+                # create access token
+                access_token = create_access_token(identity=existing_user.id, fresh=True)
+                # create refresh token
+                refresh_token = create_refresh_token(existing_user.id)
+                # return token
+                return {'access_token': access_token, 'refresh_token': refresh_token}, 200
+            return {'message': 'User is not activated. Please check your email.'}, 401
 
         return {'message': 'Invalid credentials.'}, 401
 
@@ -114,3 +116,20 @@ class UserTokenRefresh(Resource):
         user_id = get_jwt_identity()
         new_token = create_access_token(identity=user_id, fresh=False)
         return {'access_token': new_token}, 200
+
+
+class UserEmailActivation(Resource):
+    def get(self, user_id: str):
+        user = UserModel.find_by_id(user_id)
+        if not user:
+            return {'message': 'User not found.'}, 404
+
+        user.is_active = True
+        user.save_to_db()
+
+        print(user.is_active)
+
+        headers = {'Content-Type': 'text/html'}
+        return make_response(render_template('user_verified_page.html', context={'email': user.email}), 200, headers)
+
+        # return {'message': 'User successfully activated.'}, 200

@@ -7,7 +7,14 @@ from db import db
 from ma import ma
 from blacklist import BLACKLIST
 from authentication import authenticate, identity
-from resources.user import UserRegister, User, UserLogin, UserTokenRefresh, UserLogout
+from resources.user import (
+    UserRegister, 
+    User, 
+    UserLogin, 
+    UserTokenRefresh, 
+    UserLogout, 
+    UserEmailActivation
+)
 from resources.item import Item, ItemList
 from resources.store import Store, StoreList
 
@@ -67,13 +74,13 @@ def revoked_token_callback():
     return jsonify({'message': 'The token has been revoked', 'action': False}), 401
 
 
-
 api.add_resource(Item, '/item/<string:name>')
 api.add_resource(ItemList, '/items')
 api.add_resource(Store, '/store/<string:name>')
 api.add_resource(StoreList, '/stores')
 api.add_resource(UserRegister, '/register')
 api.add_resource(User, '/user/<int:id_>')
+api.add_resource(UserEmailActivation, '/user/activate/<int:user_id>')
 api.add_resource(UserLogin, '/login')
 api.add_resource(UserTokenRefresh, '/refresh')
 api.add_resource(UserLogout, '/logout')

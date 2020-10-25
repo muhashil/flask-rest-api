@@ -10,10 +10,13 @@ class UserModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), nullable=False)
     password = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(100))
+    is_active = db.Column(db.Boolean, default=False)
 
-    def __init__(self, username: str, password: str):
+    def __init__(self, username: str, password: str, email: str=None):
         self.username = username
         self.password = password
+        self.email = email
 
     def json(self) -> UserJSON:
         return {'id': self.id, 'username': self.username}
