@@ -2,16 +2,16 @@ from typing import Dict, List, Union
 
 from db import db
 
-ItemJSON = [str, Union[int, str, float]]
+ItemJSON = Dict[str, Union[int, str, float]]
 
 class ItemModel(db.Model):
     __tablename__ = 'items'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), unique=True)
-    price = db.Column(db.Float(precision=2))
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    price = db.Column(db.Float(precision=2), nullable=False)
 
-    store_id = db.Column(db.Integer, db.ForeignKey('stores.id'))
+    store_id = db.Column(db.Integer, db.ForeignKey('stores.id'), nullable=False)
     store = db.relationship('StoreModel')
 
     def __init__(self, name: str, price: float, store_id: int):
