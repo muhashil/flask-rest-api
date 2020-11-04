@@ -43,6 +43,10 @@ class UserRegister(Resource):
             username = user.username
             return {'message': f'A user with username `{username}` already exists.'}, 400
 
+        if UserModel.find_by_email(user.email):
+            email = user.email
+            return {'message': f'A user with email `{email}` already exists.'}, 400
+
         user.save_to_db()
 
         return {'message': 'User successfully created.'}, 201
@@ -81,7 +85,7 @@ class UserLogin(Resource):
     def post(self):
         # get data from parser
         try:
-            user = user_schema.load(request.get_json())
+            user = user_schema.load(request.get_json(), partial=('email',))
         except ValidationError as err:
             return err.messages, 400
 
@@ -126,8 +130,6 @@ class UserEmailActivation(Resource):
 
         user.is_active = True
         user.save_to_db()
-
-        print(user.is_active)
 
         headers = {'Content-Type': 'text/html'}
         return make_response(render_template('user_verified_page.html', context={'email': user.email}), 200, headers)

@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, jsonify
 from flask_restful import Api
 # from flask_jwt import JWT
@@ -19,8 +21,8 @@ from resources.item import Item, ItemList
 from resources.store import Store, StoreList
 
 app = Flask(__name__)
-app.secret_key = 'CgP2aqKmC7ewEvY65wuVnn3m5DwHrt3e'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
+app.secret_key = os.environ.get('APP_SECRET_KEY')
+app.config['SQLALCHEMY_DATABASE_URI'] =  os.environ.get('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['PROPAGATE_EXCEPTIONS'] = True
 app.config['JWT_BLACKLIST_ENABLED'] = True # allowing blacklist feature
