@@ -4,6 +4,7 @@ from flask import url_for, request
 
 from db import db
 from libs.mailgun import Mailgun, MailgunException
+from models.confirmation import ConfirmationModel
 
 UserJSON = Dict[str, Union[int, str]]
 
@@ -14,7 +15,9 @@ class UserModel(db.Model):
     username = db.Column(db.String(100), nullable=False, unique=True)
     password = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), nullable=False, unique=True)
-    is_active = db.Column(db.Boolean, default=False)
+    # is_active = db.Column(db.Boolean, default=False)
+
+    confirmation = db.relationship("ConfirmationModel", lazy="dynamic", cascade="all, delete-orphan")
 
     def __init__(self, username: str, password: str, email: str=None):
         self.username = username
@@ -44,6 +47,10 @@ class UserModel(db.Model):
         html = f'<html>Please confirm your email using the following link: <a href="{confirmation_link}">{confirmation_link}</a></html>'
 
         return Mailgun.send_email([self.email], subject, text, html)
+
+    @property
+    def most_recent_confirmation(self):
+        self.confirmation.order_by(db.desc(ConfirmationModel.expired_at)).first()
 
     def save_to_db(self) -> None:
         db.session.add(self)

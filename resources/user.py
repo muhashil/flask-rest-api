@@ -12,6 +12,7 @@ from flask_jwt_extended import (
 
 from marshmallow import ValidationError
 from models.user import UserModel
+from models.confirmation import ConfirmationModel
 from schemas.user import UserSchema
 from blacklist import BLACKLIST
 
@@ -48,6 +49,9 @@ class UserRegister(Resource):
             return {'message': f'A user with email `{email}` already exists.'}, 400
 
         user.save_to_db()
+
+        confirmation = ConfirmationModel(user_id=user.id)
+        confirmation.save_to_db()
 
         return {'message': 'User successfully created.'}, 201
 

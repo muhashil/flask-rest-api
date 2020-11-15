@@ -6,3 +6,4 @@ marshmallow==3.8.0
 flask-marshmallow==0.14.0
 marshmallow-sqlalchemy==0.24.0
 requests
+python-dotenv

@@ -15,8 +15,10 @@ from resources.user import (
     UserLogin, 
     UserTokenRefresh, 
     UserLogout, 
-    UserEmailActivation
+    # UserEmailActivation
 )
+
+from resources.confirmation import UserConfirmation
 from resources.item import Item, ItemList
 from resources.store import Store, StoreList
 
@@ -82,7 +84,8 @@ api.add_resource(Store, '/store/<string:name>')
 api.add_resource(StoreList, '/stores')
 api.add_resource(UserRegister, '/register')
 api.add_resource(User, '/user/<int:id_>')
-api.add_resource(UserEmailActivation, '/user/activate/<int:user_id>')
+# api.add_resource(UserEmailActivation, '/user/activate/<int:user_id>')
+api.add_resource(UserConfirmation, '/confirm_user/<string:confirmation_id>')
 api.add_resource(UserLogin, '/login')
 api.add_resource(UserTokenRefresh, '/refresh')
 api.add_resource(UserLogout, '/logout')
