@@ -2,6 +2,11 @@ from flask_restful import Resource
 from flask import make_response, render_template
 
 from models.confirmation import ConfirmationModel
+from models.user import UserModel
+from schemas.confirmation import ConfirmationSchema
+
+
+confirmation_schema = ConfirmationSchema()
 
 class UserConfirmation(Resource):
     def get(self, confirmation_id: str):
@@ -24,8 +29,39 @@ class UserConfirmation(Resource):
 
 
 class ConfirmationByUser(Resource):
-    def get(self, confirmation_id: str):
-        pass
+    def get(self, user_id: str):
+        user = UserModel.find_by_id(id_=user_id)
+        if not user:
+            return {'message': 'User not found'}, 404
 
-    def post(self):
-        pass
+        return (
+            {
+                'current_time': int(time()),
+                'confirmation': [confirmation_schema.dump(confirmation) for confirmation in user.confirmation.order_by(ConfirmationModel.expire_at)]
+            },
+            200
+        )
+
+    def post(self, user_id: str):
+        """
+        Resend confirmation email.
+        """
+        user = UserModel.find_by_id(id_=user_id)
+        if not user:
+            return {'message': 'User not found'}, 404
+
+        try:
+            last_confirmation = user.most_recent_confirmation
+            if last_confirmation:
+                if last_confirmation.confirmed:
+                    return {'message': 'You are already confirmed'}, 400
+
+                last_confirmation.force_to_expire()
+
+            new_confirmation = ConfirmationModel(user_id=user_id)
+            new_confirmation.save_to_db()
+
+            return {'message': 'Successfully resend confirmation.'}, 200
+
+        except Exception:
+            return {'message': 'Failed to resend confirmation'}, 500
